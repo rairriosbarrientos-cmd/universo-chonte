@@ -1,6 +1,6 @@
 // Panel de Rair (public/rair.html): ver si ella tiene los avisos activos y mandarle un mensaje cuando quiera.
 import { getStore } from '@netlify/blobs';
-import { claveValida, equipoDe, hoyEnZacatecas, json, leerDispositivos, mandar, mandarElDeHoy, mensajeDelDia } from '../lib/chonte.mjs';
+import { claveValida, equipoDe, hoyEnZacatecas, idDe, json, leerDispositivos, mandar, mandarElDeHoy, mensajeDelDia, quitarDispositivo } from '../lib/chonte.mjs';
 
 export default async (req) => {
   if (!process.env.CLAVE_RAIR) return json({ error: 'Falta CLAVE_RAIR en las variables de entorno de Netlify' }, 500);
@@ -11,8 +11,8 @@ export default async (req) => {
     const lista = await leerDispositivos(store), hoy = hoyEnZacatecas();
     return json({
       hoy,
-      dispositivos: lista.map((d) => ({ equipo: equipoDe(d.ua), alta: d.alta, visto: d.visto, inicio: d.inicio })),
-      deHoy: lista.length ? mensajeDelDia(lista[0].inicio, hoy) : null,
+      dispositivos: lista.map((d) => ({ id: idDe(d.sub.endpoint), equipo: equipoDe(d.ua), alta: d.alta, visto: d.visto, inicio: d.inicio })),
+      deHoy: lista.length ? mensajeDelDia(lista.at(-1).inicio, hoy) : null, // el último en darse de alta (el de ella, si tú probaste antes)
       ultimo: await store.get('ultimo', { type: 'json' }),
       historial: (await store.get('historial', { type: 'json' })) || [],
     });
@@ -23,6 +23,7 @@ export default async (req) => {
     try { d = await req.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
     try {
       if (d.accion === 'hoy') return json(await mandarElDeHoy(store, { forzar: true }));
+      if (d.accion === 'quitar') return json(await quitarDispositivo(store, String(d.id || '')));
       const texto = String(d.texto || '').trim().slice(0, 300);
       if (!texto) return json({ error: 'Escribe el mensaje' }, 400);
       const titulo = String(d.titulo || '').trim().slice(0, 60) || 'Rair ✦';

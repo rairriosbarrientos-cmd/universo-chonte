@@ -43,6 +43,9 @@
   ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
   li { border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 10px; }
   li small { color: var(--tenue); display: block; }
+  .equipos { margin-top: 12px; }
+  .equipos li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .equipos button { min-height: 38px; padding: 7px 14px; font-size: 13.5px; color: var(--mal); border-color: rgba(255, 122, 122, .35); }
   [hidden] { display: none !important; }
   .salir { background: none; border: none; color: var(--tenue); text-decoration: underline; min-height: 0; padding: 4px; justify-self: center; font-weight: 500; }
 </style>
@@ -67,6 +70,7 @@
         <h2>Su teléfono</h2>
         <div class="estado"><span class="punto" id="punto"></span><span id="estado">Revisando…</span></div>
         <p class="dato" id="detalle"></p>
+        <ul class="equipos" id="equipos"></ul>
       </section>
 
       <section class="caja">
@@ -119,9 +123,16 @@
     $('punto').className = `punto ${n ? 'ok' : 'mal'}`;
     $('estado').textContent = n ? `Tiene los avisos activados ✓` : 'Todavía no activa las notificaciones';
     $('detalle').textContent = n
-      ? d.dispositivos.map((x) => `${x.equipo} · desde ${fecha(x.alta)}`).join(' · ')
+      ? (n > 1 ? `${n} teléfonos. Si uno es el tuyo de prueba, quítalo.` : 'Si este es tu cel de prueba, quítalo para que no te lleguen sus mensajes.')
       : 'Pídele que abra la app y toque 🔔 (en iPhone: primero Compartir → Agregar a inicio, y abrirla desde ahí).';
-    $('deHoy').textContent = d.deHoy ? `Día ${d.deHoy.dia}: ${d.deHoy.texto}` : 'Cuando active los avisos aquí vas a ver el mensaje que le toca hoy.';
+    $('equipos').replaceChildren(...d.dispositivos.map((x) => {
+      const li = document.createElement('li'), t = document.createElement('span'), q = document.createElement('button');
+      t.textContent = `📱 ${x.equipo} · desde ${fecha(x.alta)}`;
+      q.textContent = 'Quitar'; q.addEventListener('click', () => quitar(x, q));
+      li.append(t, q); return li;
+    }));
+    const t = d.deHoy?.texto || '';
+    $('deHoy').textContent = d.deHoy ? (/^Día \d+/.test(t) ? t : `Día ${d.deHoy.dia}: ${t}`) : 'Cuando active los avisos aquí vas a ver el mensaje que le toca hoy.';
     $('ultimo').textContent = d.ultimo ? `Último envío: ${diaTxt(d.ultimo.fecha)}, ${new Date(d.ultimo.hora).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' })} · llegó a ${d.ultimo.enviados} de ${d.ultimo.total}` : 'Sale solito cada día a las 9:00 am (hora de Zacatecas).';
     $('btnMandar').disabled = $('btnHoy').disabled = !n;
     $('cajaHistorial').hidden = !d.historial.length;
@@ -162,6 +173,12 @@
     } catch (e) { msg('msgMandar', e.message, 'mal'); }
     $('btnMandar').disabled = false;
   });
+
+  async function quitar(x, boton) {
+    if (!confirm(`¿Quitar el ${x.equipo} dado de alta el ${fecha(x.alta)}? Ya no le llegarán los mensajes a ese teléfono.`)) return;
+    boton.disabled = true;
+    try { await api('POST', { accion: 'quitar', id: x.id }); await cargar(); } catch (e) { alert(e.message); boton.disabled = false; }
+  }
 
   $('btnHoy').addEventListener('click', async () => {
     if (!confirm('¿Reenviarle el mensaje de hoy? Si ya le llegó, le va a llegar otra vez.')) return;

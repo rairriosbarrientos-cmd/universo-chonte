@@ -139,6 +139,22 @@ test('si ella quita el permiso, se borra ese teléfono', async () => {
   assert.deepEqual([r.enviados, r.borrados, r.total], [1, 0, 1]);
 });
 
+test('quitar un teléfono desde el panel (el de prueba de Rair)', async () => {
+  const k = { 'x-clave': 'clave-de-prueba' };
+  const prueba = telefono('/cel-rair');
+  await pedir(suscribir, '/api/suscribir', { metodo: 'POST', cuerpo: { sub: prueba.sub, inicio: haceDias(0) } });
+  let est = await (await pedir(rair, '/api/rair', { headers: k })).json();
+  assert.equal(est.dispositivos.length, 2);
+  assert.equal(est.deHoy.dia, 1); // el último en darse de alta
+  const id = est.dispositivos.at(-1).id;
+  assert.match(id, /^[0-9a-f]{12}$/);
+  assert.deepEqual(await (await pedir(rair, '/api/rair', { metodo: 'POST', headers: k, cuerpo: { accion: 'quitar', id } })).json(), { quitados: 1 });
+  est = await (await pedir(rair, '/api/rair', { headers: k })).json();
+  assert.equal(est.dispositivos.length, 1);
+  assert.equal(est.deHoy.dia, 40);
+  assert.deepEqual(await (await pedir(rair, '/api/rair', { metodo: 'POST', headers: k, cuerpo: { accion: 'quitar', id: 'nada' } })).json(), { quitados: 0 });
+});
+
 test('sin llave privada en Netlify avisa claro', async () => {
   const antes = process.env.VAPID_PRIVATE_KEY; delete process.env.VAPID_PRIVATE_KEY;
   const r = await pedir(rair, '/api/rair', { metodo: 'POST', headers: { 'x-clave': 'clave-de-prueba' }, cuerpo: { texto: 'hola' } });

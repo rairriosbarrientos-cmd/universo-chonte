@@ -51,6 +51,13 @@ export function mensajeDelDia(inicio, hoy = hoyEnZacatecas()) {
 
 // ---------- Dispositivos de ella (Netlify Blobs) ----------
 export const leerDispositivos = async (store) => (await store.get('suscripciones', { type: 'json' })) || [];
+export const idDe = (endpoint) => createHash('sha256').update(endpoint).digest('hex').slice(0, 12); // pa' identificarlo en el panel sin enseñar la suscripción
+
+export async function quitarDispositivo(store, id) {
+  const lista = await leerDispositivos(store), resto = lista.filter((d) => idDe(d.sub.endpoint) !== id);
+  if (resto.length !== lista.length) await store.setJSON('suscripciones', resto);
+  return { quitados: lista.length - resto.length };
+}
 
 const b64url = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && /^[A-Za-z0-9_-]+=*$/.test(s);
 function validarSub(sub) {
