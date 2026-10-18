@@ -1,0 +1,22 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Universo de Chonte//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Universo de Chonte ✦
+BEGIN:VEVENT
+UID:mensaje-diario@universo-chonte
+DTSTAMP:20261018T120000Z
+DTSTART:20261019T090000
+DURATION:PT5M
+RRULE:FREQ=DAILY;COUNT=400
+SUMMARY:✦ Tu mensaje de hoy te espera\, Chonte
+DESCRIPTION:Abre tu universo y toca la estrella de hoy en la Vía Láctea 
+ ✦
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:✦ Tu mensaje de hoy te espera\, Chonte
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+END:VCALENDAR

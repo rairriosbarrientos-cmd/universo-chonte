@@ -1,0 +1,14 @@
+{
+  "name": "universo-chonte",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mensajes": "node scripts/mensajes.mjs",
+    "test": "node --test test/*.test.mjs",
+    "build": "node scripts/mensajes.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "web-push": "^3.6.7"
+  }
+}
