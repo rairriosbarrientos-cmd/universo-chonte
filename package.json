@@ -5,7 +5,8 @@
   "scripts": {
     "mensajes": "node scripts/mensajes.mjs",
     "test": "node --test test/*.test.mjs",
-    "build": "node scripts/mensajes.mjs"
+    "build": "node scripts/mensajes.mjs",
+    "demo": "node scripts/demo.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^8.1.0",
